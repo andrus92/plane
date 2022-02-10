@@ -1,5 +1,6 @@
 import start from "./modules/start.js";
 import getFormPerson from "./modules/formPerson.js";
+import preparePlane from "./modules/preparePlane.js"
 
 const init = (selectorApp, title) => {
     const app = document.querySelector(selectorApp);
@@ -13,6 +14,8 @@ const init = (selectorApp, title) => {
         firstForm.remove();
 
         main.append(...forms);
+        
+        preparePlane(forms, main);
     });
 };
 
