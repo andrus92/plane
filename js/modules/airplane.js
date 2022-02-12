@@ -1,5 +1,6 @@
 import createElement from "./createElement.js";
 import declOfNum from "./declOfNum.js";
+import {getStorage, setStorage } from "../service/storage.js";
 
 const createCockpit = (titleText) => {
     const cockpit = createElement('div', {
@@ -29,7 +30,7 @@ const createExit = () => {
     return fuselage;
 };
 
-const createBlockSeat = (n, count) => {
+const createBlockSeat = (n, count, bookedSeats) => {
     const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
 
     const fuselage = createElement('ol', {
@@ -48,12 +49,13 @@ const createBlockSeat = (n, count) => {
             });
 
             const wrapperCheck = createElement('label');
-            
+            const seatValue = `${i}${letter}`;
             const check = createElement('input', {
                 className: 'seat',
                 name: 'seat',
                 type: 'checkbox',
-                value: `${i}${letter}`,
+                value: seatValue,
+                disabled: bookedSeats.includes(seatValue),
             });
             
             
@@ -72,6 +74,8 @@ const createBlockSeat = (n, count) => {
 
 const createAirplane = (title, tourData) => {
     const scheme = tourData.scheme;
+    const bookedSeats = getStorage(tourData.id).map(item => item.seat);
+
     const choicesSeat = createElement('form', {
         className: 'choises-seat',
     });
@@ -91,7 +95,7 @@ const createAirplane = (title, tourData) => {
         }
 
         if (typeof type === 'number') {
-            const blockSeat = createBlockSeat(n, type);
+            const blockSeat = createBlockSeat(n, type, bookedSeats);
             n = n + type;
             return blockSeat;
         }
@@ -103,7 +107,9 @@ const createAirplane = (title, tourData) => {
     return choicesSeat;
 };
 
-const checkSeat = (form, data) => {
+const checkSeat = (form, data, id) => {
+    const bookedSeats = getStorage(id).map(item => item.seat);
+
     form.addEventListener('change', () => {
         console.log('change')
         const formData = new FormData(form);
@@ -120,9 +126,9 @@ const checkSeat = (form, data) => {
             });
         } else {
             [...form].forEach(item => {
-                if (item.disabled === true && item.name === 'seat') {
+                if (!bookedSeats.includes(item.value)) {
                     item.disabled = false;
-                }  
+                }
             });
         }
     });
@@ -135,6 +141,16 @@ const checkSeat = (form, data) => {
         for (let i = 0; i < data.length; i++) {
             data[i].seat = booking[i];
         }
+
+        setStorage(id, data);
+
+        form.remove();
+        document.body.innerHTML = `
+            <h1 class="title">Спасибо, хорошего полёта!</h1>
+            <h2 class="title">${booking.length === 1 ?
+            `Ваше место: ${booking}` :
+            `Ваши места: ${booking}`}</h2> 
+        `;
     });
 };
 
@@ -144,7 +160,7 @@ const airplane = (main, data, tourData) => {
 
     const choiseForm = createAirplane(title, tourData);
 
-    checkSeat(choiseForm, data);
+    checkSeat(choiseForm, data, tourData.id);
 
     main.append(choiseForm);
 };
